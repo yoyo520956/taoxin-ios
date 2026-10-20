@@ -67,7 +67,7 @@ struct ProfileEditView: View {
         .navigationTitle("编辑资料")
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(Color.wxBg, for: .navigationBar)
-        .onAppear(loadCurrent)
+        .onAppear { loadCurrent() }
         .onDisappear {
             if saved, let p = Store.loadProfile() {
                 chatCore.restart(with: p)
