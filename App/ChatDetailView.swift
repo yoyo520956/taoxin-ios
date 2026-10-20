@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct ChatDetailView: View {
+struct DemoChatDetailView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var ui: UIState
     @State private var session: Session

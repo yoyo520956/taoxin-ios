@@ -1,19 +1,16 @@
 import SwiftUI
 
-enum AppTab: Int, CaseIterable {
-    case chats, contacts, discover, me
-}
-
 struct RootTabView: View {
     @State private var tab: AppTab = .chats
     @StateObject private var ui = UIState()
+    @EnvironmentObject private var chatCore: ChatCore
 
     var body: some View {
         VStack(spacing: 0) {
             Group {
                 switch tab {
                 case .chats:    NavigationStack { ChatsView() }
-                case .contacts: NavigationStack { ContactsView() }
+                case .nearby:   NavigationStack { NearbyView() }
                 case .discover: NavigationStack { DiscoverView() }
                 case .me:       NavigationStack { MeView() }
                 }
@@ -21,7 +18,7 @@ struct RootTabView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
 
             if !ui.hideTabBar {
-                TabBarView(tab: $tab)
+                TabBarView(tab: $tab, unread: chatCore.totalUnread)
                     .transition(.move(edge: .bottom))
             }
         }
@@ -30,17 +27,20 @@ struct RootTabView: View {
     }
 }
 
-// MARK: - TabBar（微信样式：白底 + 细线 + 图标/文字）
+enum AppTab: Int, CaseIterable {
+    case chats, nearby, discover, me
+}
+
+// MARK: - TabBar（微信样式）
 
 struct TabBarView: View {
     @Binding var tab: AppTab
-    @EnvironmentObject var ui: UIState
-    @State private var unreadTotal = 15
+    var unread: Int
 
     var body: some View {
         HStack(spacing: 0) {
-            item(.chats, "tab_chats", "tab_chats_on", "微信", unreadTotal)
-            item(.contacts, "tab_contacts", "tab_contacts_on", "通讯录", 0)
+            item(.chats, "tab_chats", "tab_chats_on", "微信", unread)
+            item(.nearby, "tab_contacts", "tab_contacts_on", "附近", 0)
             item(.discover, "tab_discover", "tab_discover_on", "发现", 0)
             item(.me, "tab_me", "tab_me_on", "我", 0)
         }

@@ -1,20 +1,22 @@
 import SwiftUI
 
 struct MeView: View {
+    @EnvironmentObject private var chatCore: ChatCore
+
     var body: some View {
         List {
             Section {
                 NavigationLink {
-                    ProfileView(friend: DemoData.me)
+                    ProfileEditView()
                 } label: {
                     HStack(spacing: 14) {
-                        AvatarView(asset: DemoData.me.avatar, size: 62)
+                        myAvatar
                         VStack(alignment: .leading, spacing: 6) {
-                            Text(DemoData.me.name)
+                            Text(Store.loadProfile()?.nickname ?? "我")
                                 .font(.system(size: 20, weight: .semibold))
                                 .foregroundColor(.wxText)
-                            Text("微信号：\(DemoData.me.wxid)")
-                                .font(.system(size: 13))
+                            Text("uid：\((Store.loadProfile()?.uid.prefix(8) ?? ""))… · 本机账号")
+                                .font(.system(size: 12))
                                 .foregroundColor(.wxGray)
                         }
                         Spacer()
@@ -57,5 +59,12 @@ struct MeView: View {
         .navigationTitle("我")
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(Color.wxBg, for: .navigationBar)
+    }
+
+    @ViewBuilder
+    private var myAvatar: some View {
+        if let p = Store.loadProfile() {
+            MyAvatarView(profile: p, size: 62)
+        }
     }
 }

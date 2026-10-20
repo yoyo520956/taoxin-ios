@@ -2,7 +2,8 @@ import SwiftUI
 
 struct SettingsView: View {
     @State private var speaker = false
-    @State private var youth = false
+    @EnvironmentObject private var chatCore: ChatCore
+    @State private var confirmLogout = false
 
     var body: some View {
         List {
@@ -12,14 +13,12 @@ struct SettingsView: View {
             }
 
             Section {
-                Toggle("青少年模式", isOn: $youth)
                 row("消息通知")
                 row("隐私")
                 row("通用")
             }
 
             Section {
-                row("帮助与反馈")
                 NavigationLink {
                     about
                 } label: {
@@ -30,12 +29,13 @@ struct SettingsView: View {
             Section {
                 HStack {
                     Spacer()
-                    Text("清空聊天记录")
-                        .font(.system(size: 16))
+                    Text("退出登录")
+                        .font(.system(size: 16, weight: .medium))
                         .foregroundColor(Color(hex: 0xFA5151))
                     Spacer()
                 }
                 .contentShape(Rectangle())
+                .onTapGesture { confirmLogout = true }
             }
         }
         .listStyle(.insetGrouped)
@@ -44,6 +44,17 @@ struct SettingsView: View {
         .navigationTitle("设置")
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(Color.wxBg, for: .navigationBar)
+        .alert("退出登录", isPresented: $confirmLogout) {
+            Button("取消", role: .cancel) {}
+            Button("退出", role: .destructive) { logout() }
+        } message: {
+            Text("聊天记录仍保留在本机，重新登录后可见")
+        }
+    }
+
+    private func logout() {
+        chatCore.stop()
+        Store.clearAccount()
     }
 
     private var about: some View {
@@ -56,12 +67,13 @@ struct SettingsView: View {
                 .padding(.top, 60)
             Text("桃信")
                 .font(.system(size: 22, weight: .semibold))
-            Text("Version 1.0.0 (20261020.01)")
+            Text("Version 2.0.0 (20261020.02)")
                 .font(.system(size: 13))
                 .foregroundColor(.wxGray)
-            Text("一颗软软的聊天桃子 · 全部图标 AI 原创生成")
+            Text("局域网真聊天 · 设备直连不经过服务器\n全部图标 AI 原创生成")
                 .font(.system(size: 12))
                 .foregroundColor(Color(hex: 0xB2B2B2))
+                .multilineTextAlignment(.center)
             Spacer()
         }
         .frame(maxWidth: .infinity)

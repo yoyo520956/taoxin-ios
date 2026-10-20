@@ -1,17 +1,56 @@
 import SwiftUI
 
 struct ChatsView: View {
-    @State private var sessions = DemoData.sessions
+    @EnvironmentObject private var chatCore: ChatCore
+
+    private var realChats: [RealChat] {
+        chatCore.chats.values.sorted { ($0.msgs.last?.ts ?? 0) > ($1.msgs.last?.ts ?? 0) }
+    }
 
     var body: some View {
         List {
-            ForEach(Array(sessions.enumerated()), id: \.element.id) { i, s in
-                NavigationLink(value: s) {
-                    ChatRow(session: s)
+            if realChats.isEmpty {
+                Section {
+                    VStack(spacing: 8) {
+                        Image("dc_nearby").wxIcon(34).opacity(0.8)
+                        Text("还没有真实会话")
+                            .font(.system(size: 15, weight: .medium))
+                            .foregroundColor(.wxText)
+                        Text("去「附近」找同时打开桃信的朋友，\n消息在设备之间直达，不经过服务器")
+                            .font(.system(size: 12))
+                            .foregroundColor(.wxGray)
+                            .multilineTextAlignment(.center)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 18)
+                    .listRowSeparator(.hidden)
                 }
-                .listRowSeparator(.hidden)
-                .listRowBackground(Color.white)
-                .listRowInsets(EdgeInsets())
+            } else {
+                Section {
+                    ForEach(realChats) { chat in
+                        NavigationLink(value: RealRoute(uid: chat.peer.uid)) {
+                            RealChatRow(chat: chat)
+                        }
+                        .listRowSeparator(.hidden)
+                        .listRowBackground(Color.white)
+                        .listRowInsets(EdgeInsets())
+                    }
+                }
+            }
+
+            Section {
+                ForEach(Array(DemoData.sessions.enumerated()), id: \.element.id) { i, s in
+                    NavigationLink(value: s) {
+                        ChatRow(session: s)
+                    }
+                    .listRowSeparator(.hidden)
+                    .listRowBackground(Color.white)
+                    .listRowInsets(EdgeInsets())
+                }
+            } header: {
+                Text("示例会话")
+                    .font(.system(size: 13))
+                    .foregroundColor(.wxGray)
             }
         }
         .listStyle(.plain)
@@ -28,52 +67,54 @@ struct ChatsView: View {
             }
         }
         .toolbarBackground(Color.wxBg, for: .navigationBar)
-        .navigationDestination(for: Session.self) { s in
-            ChatDetailView(session: s)
+        .navigationDestination(for: RealRoute.self) { r in
+            RealChatDetailView(uid: r.uid)
         }
-        .onAppear {
-            // 从聊天页回来时清空该会话未读（简化：全部清空）
+        .navigationDestination(for: Session.self) { s in
+            DemoChatDetailView(session: s)
         }
     }
 }
 
-// MARK: - 会话行
+// MARK: - 真实会话行
 
-struct ChatRow: View {
-    var session: Session
+struct RealChatRow: View {
+    var chat: RealChat
+    @EnvironmentObject private var chatCore: ChatCore
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
             ZStack(alignment: .topTrailing) {
-                AvatarView(asset: session.avatar, size: 48)
+                RealAvatarView(uid: chat.peer.uid, nickname: chat.peer.nickname, size: 48)
                     .padding(.leading, 14)
                     .padding(.top, 10)
-                if session.unread > 0 {
-                    BadgeView(count: session.unread, muted: session.muted)
+                let n = chatCore.unread[chat.peer.uid] ?? 0
+                if n > 0 {
+                    BadgeView(count: n)
                         .offset(x: 6, y: -4)
                 }
             }
             .frame(width: 72)
 
             VStack(alignment: .leading, spacing: 5) {
-                Text(session.name)
+                Text(chat.peer.nickname)
                     .font(.system(size: 17, weight: .medium))
                     .foregroundColor(.wxText)
                     .lineLimit(1)
-                Text(session.preview)
+                Text(preview)
                     .font(.system(size: 14))
                     .foregroundColor(.wxGray)
                     .lineLimit(1)
             }
             Spacer(minLength: 8)
             VStack(alignment: .trailing, spacing: 6) {
-                Text(session.time)
+                Text(timeText)
                     .font(.system(size: 12))
                     .foregroundColor(Color(hex: 0xB2B2B2))
-                if session.muted {
-                    Image("ic_voice")
-                        .wxIcon(13)
-                        .opacity(0.35)
+                if !chatCore.onlinePeers.contains(chatCore.uidToPeer[chat.peer.uid] ?? "") {
+                    Circle().fill(Color(hex: 0xD0D0D0)).frame(width: 7, height: 7)
+                } else {
+                    Circle().fill(Color.wxGreen).frame(width: 7, height: 7)
                 }
             }
             .padding(.top, 12)
@@ -82,5 +123,23 @@ struct ChatRow: View {
         .padding(.bottom, 10)
         .background(Color.white)
         .contentShape(Rectangle())
+    }
+
+    private var preview: String {
+        guard let m = chat.msgs.last else { return "" }
+        if m.kind == "img" { return m.fromMe ? "[图片]" : "[图片]" }
+        return (m.fromMe ? "" : "") + m.text
+    }
+
+    private var timeText: String {
+        guard let ts = chat.msgs.last?.ts else { return "" }
+        let d = Date(timeIntervalSince1970: ts)
+        let f = DateFormatter()
+        if Calendar.current.isDateInToday(d) {
+            f.dateFormat = "HH:mm"
+        } else {
+            f.dateFormat = "MM-dd"
+        }
+        return f.string(from: d)
     }
 }
