@@ -1,0 +1,41 @@
+name: Taoxin
+options:
+  bundleIdPrefix: com.qingyao
+  deploymentTarget:
+    iOS: "16.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    MARKETING_VERSION: 1.0.0
+    CURRENT_PROJECT_VERSION: "20261020.01"
+    SWIFT_VERSION: "5.9"
+    ENABLE_DEBUG_DYLIB: "NO"
+    CODE_SIGNING_ALLOWED: "NO"
+    CODE_SIGN_IDENTITY: ""
+    GENERATE_INFOPLIST_FILE: "NO"
+targets:
+  Taoxin:
+    type: application
+    platform: iOS
+    sources:
+      - path: App
+      - path: Resources
+        buildPhase: resources
+        excludes: ["Info.plist"]
+    info:
+      path: Resources/Info.plist
+      properties:
+        CFBundleDisplayName: 桃信
+        CFBundleName: Taoxin
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+        UIRequiresFullScreen: true
+        ITSAppUsesNonExemptEncryption: false
+    settings:
+      base:
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        PRODUCT_BUNDLE_IDENTIFIER: com.qingyao.taoxin
+        TARGETED_DEVICE_FAMILY: "1"
