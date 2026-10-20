@@ -14,7 +14,7 @@ final class ChatCore: NSObject, ObservableObject {
     @Published var onlinePeers: Set<String> = []            // 已连接 peer displayName
 
     private(set) var profile: MyProfile?
-    private var mcSession: MCSession?
+    private(set) var mcSession: MCSession?
     private var advertiser: MCNearbyServiceAdvertiser?
     private var browser: MCNearbyServiceBrowser?
     var peerIDs: [String: MCPeerID] = [:]           // displayName → MCPeerID
