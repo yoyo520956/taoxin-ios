@@ -26,7 +26,7 @@ extension ChatCore: MCSessionDelegate, MCNearbyServiceAdvertiserDelegate, MCNear
 
     /// 连接建立后互发名片（uid/昵称/头像）
     private func sendHello(to peerID: MCPeerID) {
-        guard let p = profile, let s = session else { return }
+        guard let p = profile, let s = mcSession else { return }
         var avaData: Data?
         if p.customAvatar {
             avaData = Store.shared.loadImage("ava_self.jpg")?.jpegData(compressionQuality: 0.5)
@@ -83,7 +83,7 @@ extension ChatCore: MCSessionDelegate, MCNearbyServiceAdvertiserDelegate, MCNear
     // MARK: 被邀请 → 自动接受
 
     func advertiser(_ advertiser: MCNearbyServiceAdvertiser, didReceiveInvitationFromPeer peerID: MCPeerID, withContext context: Data?, invitationHandler: @escaping (Bool, MCSession?) -> Void) {
-        invitationHandler(true, session)
+        invitationHandler(true, mcSession)
     }
 
     // MARK: 发现 / 丢失

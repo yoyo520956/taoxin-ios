@@ -122,3 +122,51 @@ struct InputBar: View {
         )
     }
 }
+
+// MARK: - 示例会话行
+
+struct ChatRow: View {
+    var session: Session
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            ZStack(alignment: .topTrailing) {
+                AvatarView(asset: session.avatar, size: 48)
+                    .padding(.leading, 14)
+                    .padding(.top, 10)
+                if session.unread > 0 {
+                    BadgeView(count: session.unread, muted: session.muted)
+                        .offset(x: 6, y: -4)
+                }
+            }
+            .frame(width: 72)
+
+            VStack(alignment: .leading, spacing: 5) {
+                Text(session.name)
+                    .font(.system(size: 17, weight: .medium))
+                    .foregroundColor(.wxText)
+                    .lineLimit(1)
+                Text(session.preview)
+                    .font(.system(size: 14))
+                    .foregroundColor(.wxGray)
+                    .lineLimit(1)
+            }
+            Spacer(minLength: 8)
+            VStack(alignment: .trailing, spacing: 6) {
+                Text(session.time)
+                    .font(.system(size: 12))
+                    .foregroundColor(Color(hex: 0xB2B2B2))
+                if session.muted {
+                    Image("ic_voice")
+                        .wxIcon(13)
+                        .opacity(0.35)
+                }
+            }
+            .padding(.top, 12)
+            .padding(.trailing, 14)
+        }
+        .padding(.bottom, 10)
+        .background(Color.white)
+        .contentShape(Rectangle())
+    }
+}

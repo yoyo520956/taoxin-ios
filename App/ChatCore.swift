@@ -14,12 +14,12 @@ final class ChatCore: NSObject, ObservableObject {
     @Published var onlinePeers: Set<String> = []            // 已连接 peer displayName
 
     private(set) var profile: MyProfile?
-    private var session: MCSession?
+    private var mcSession: MCSession?
     private var advertiser: MCNearbyServiceAdvertiser?
     private var browser: MCNearbyServiceBrowser?
-    private var peerIDs: [String: MCPeerID] = [:]           // displayName → MCPeerID
-    private(set) var uidToPeer: [String: String] = [:]           // uid → displayName
-    private(set) var peerToUID: [String: String] = [:]      // displayName → uid
+    var peerIDs: [String: MCPeerID] = [:]           // displayName → MCPeerID
+    var uidToPeer: [String: String] = [:]           // uid → displayName
+    var peerToUID: [String: String] = [:]      // displayName → uid
     private var invited = Set<String>()
 
     var totalUnread: Int { unread.values.reduce(0, +) }
@@ -31,7 +31,7 @@ final class ChatCore: NSObject, ObservableObject {
         let name = String(profile.nickname.prefix(20))
         let me = MCPeerID(displayName: name)
         let s = MCSession(peer: me, securityIdentity: nil, encryptionPreference: .required)
-        session = s
+        mcSession = s
 
         let adv = MCNearbyServiceAdvertiser(peer: me, discoveryInfo: ["uid": profile.uid], serviceType: Self.serviceType)
         let brw = MCNearbyServiceBrowser(peer: me, serviceType: Self.serviceType)
@@ -60,7 +60,7 @@ final class ChatCore: NSObject, ObservableObject {
     func stop() {
         advertiser?.stopAdvertisingPeer()
         browser?.stopBrowsingForPeers()
-        session = nil
+        mcSession = nil
         advertiser = nil
         browser = nil
     }
@@ -72,7 +72,7 @@ final class ChatCore: NSObject, ObservableObject {
     // MARK: 连接
 
     func invite(peerName: String) {
-        guard let id = peerIDs[peerName], let s = session, !invited.contains(peerName) else { return }
+        guard let id = peerIDs[peerName], let s = mcSession, !invited.contains(peerName) else { return }
         guard !onlinePeers.contains(peerName) else { return }
         invited.insert(peerName)
         browser?.invitePeer(id, to: s, withContext: nil, timeout: 30)
@@ -104,7 +104,7 @@ final class ChatCore: NSObject, ObservableObject {
     private func deliver(_ msg: MeshMsg, kind: String, text: String, chatUID: String) {
         let peerName = uidToPeer[chatUID]
         var ok = false
-        if let peerName, let s = session, let pid = peerIDs[peerName], onlinePeers.contains(peerName) {
+        if let peerName, let s = mcSession, let pid = peerIDs[peerName], onlinePeers.contains(peerName) {
             if let data = try? JSONEncoder().encode(msg) {
                 ok = ((try? s.send(data, toPeers: [pid], with: .reliable)) != nil)
             }
