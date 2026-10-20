@@ -1,0 +1,28 @@
+name: release-helper
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: '源构建 run id'
+        required: true
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: taoxin-ipa
+          path: out
+          run-id: ${{ inputs.run_id }}
+
+      - name: Upload to Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v2.0.0
+          name: 桃信 v2.0.0 局域网真聊天
+          body: |
+            桃信 v2.0.0 —— 参考微信 8.0.79 拆解素材开发的微信风格 App
+            全部图标 AI 原创生成；局域网真聊天（MultipeerConnectivity 设备直连）、本地账号注册、真实收发文字/图片
+          files: out/Taoxin.ipa
+          fail_on_unmatched_files: true
